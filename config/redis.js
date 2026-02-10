@@ -1,37 +1,45 @@
-//Redis configuration file
-const Redis = require("ioredis");
+// const Redis = require("ioredis");
 
-let redisClient;
+// let redisClient;
 
-const connectRedis = () => {
-  redisClient = new Redis({
-    host: process.env.REDIS_HOST || "127.0.0.1",
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
-    retryDelayOnFailover: 100,
-    maxRetriesPerRequest: 3,
-    lazyConnect: true,
-  });
+// const connectRedis = () => {
+//   redisClient = new Redis({
+//     host: process.env.REDIS_HOST,
+//     port: parseInt(process.env.REDIS_PORT),
+//     password: process.env.REDIS_PASSWORD || undefined,
+//     tls: {
+//       rejectUnauthorized: false,
+//     },
+//     retryDelayOnFailover: 100,
+//     maxRetriesPerRequest: 3,
+//     lazyConnect: true,
+//     connectTimeout: 10000,
+//     commandTimeout: 5000,
+//   });
 
-  redisClient
-    .connect()
-    .then(() => {
-      console.log("Redis Connected");
-    })
-    .catch((err) => {
-      console.error("Redis Connection Error:", err.message);
-    });
+//   redisClient
+//     .connect()
+//     .then(() => {
+//       console.log("Redis Cloud Connected ✅");
+//     })
+//     .catch((err) => {
+//       console.error("Redis Cloud Connection Error:", err.message);
+//     });
 
-  redisClient.on("error", (err) => {
-    console.error("Redis Error:", err.message);
-  });
-};
+//   redisClient.on("error", (err) => {
+//     console.error("Redis Error:", err.message);
+//   });
 
-const getRedisClient = () => {
-  if (!redisClient) {
-    throw new Error("Redis client not initialized");
-  }
-  return redisClient;
-};
+//   redisClient.on("ready", () => {
+//     console.log("Redis Ready");
+//   });
+// };
 
-module.exports = { connectRedis, getRedisClient };
+// const getRedisClient = () => {
+//   if (!redisClient) {
+//     throw new Error("Redis client not initialized");
+//   }
+//   return redisClient;
+// };
+
+// module.exports = { connectRedis, getRedisClient };

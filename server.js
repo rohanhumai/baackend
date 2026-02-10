@@ -1,8 +1,9 @@
+require("node:dns/promises").setServers(["1.1.1.1", "8.8.8.8"]);
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/database");
-const { connectRedis } = require("./config/redis");
+// const { connectRedis } = require("./config/redis");
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ app.use(express.json({ limit: "10mb" }));
 
 // Connect to databases
 connectDB();
-connectRedis();
+// connectRedis();
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
