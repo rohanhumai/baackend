@@ -1,3 +1,4 @@
+//Redis configuration file
 const Redis = require("ioredis");
 
 let redisClient;
