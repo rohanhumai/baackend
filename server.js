@@ -15,7 +15,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:5173",
-      "https://mini-project-frontend1.vercel.app",
+      "https://mini-project-frontend1.vercel.app/",
     ],
     credentials: true,
   }),
