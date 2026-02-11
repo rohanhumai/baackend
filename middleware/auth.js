@@ -1,11 +1,17 @@
+// Import JWT library for verifying tokens
 const jwt = require("jsonwebtoken");
+
+// Import Teacher and Student models
 const Teacher = require("../models/Teacher");
 const Student = require("../models/Student");
 
+// ===================== TEACHER AUTHENTICATION MIDDLEWARE =====================
 const authenticateTeacher = async (req, res, next) => {
   try {
+    // Extract token from Authorization header (remove "Bearer " prefix)
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
+    // If token is missing
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -13,8 +19,10 @@ const authenticateTeacher = async (req, res, next) => {
       });
     }
 
+    // Verify token using JWT secret
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Ensure token role is "teacher"
     if (decoded.role !== "teacher") {
       return res.status(403).json({
         success: false,
@@ -22,7 +30,10 @@ const authenticateTeacher = async (req, res, next) => {
       });
     }
 
+    // Fetch teacher from database (exclude password field)
     const teacher = await Teacher.findById(decoded.id).select("-password");
+
+    // If teacher not found in DB
     if (!teacher) {
       return res.status(401).json({
         success: false,
@@ -30,9 +41,13 @@ const authenticateTeacher = async (req, res, next) => {
       });
     }
 
+    // Attach teacher object to request for downstream controllers
     req.teacher = teacher;
+
+    // Proceed to next middleware/controller
     next();
   } catch (error) {
+    // If token is invalid or expired
     res.status(401).json({
       success: false,
       message: "Invalid token.",
@@ -40,10 +55,13 @@ const authenticateTeacher = async (req, res, next) => {
   }
 };
 
+// ===================== STUDENT AUTHENTICATION MIDDLEWARE =====================
 const authenticateStudent = async (req, res, next) => {
   try {
+    // Extract token from Authorization header
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
+    // If token missing
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -51,8 +69,10 @@ const authenticateStudent = async (req, res, next) => {
       });
     }
 
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Ensure token role is "student"
     if (decoded.role !== "student") {
       return res.status(403).json({
         success: false,
@@ -60,7 +80,10 @@ const authenticateStudent = async (req, res, next) => {
       });
     }
 
+    // Fetch student from database
     const student = await Student.findById(decoded.id);
+
+    // If student not found
     if (!student) {
       return res.status(401).json({
         success: false,
@@ -68,9 +91,13 @@ const authenticateStudent = async (req, res, next) => {
       });
     }
 
+    // Attach student to request object
     req.student = student;
+
+    // Continue to next middleware/controller
     next();
   } catch (error) {
+    // Token invalid, malformed, or expired
     res.status(401).json({
       success: false,
       message: "Invalid token.",
@@ -78,4 +105,5 @@ const authenticateStudent = async (req, res, next) => {
   }
 };
 
+// Export middleware functions
 module.exports = { authenticateTeacher, authenticateStudent };
