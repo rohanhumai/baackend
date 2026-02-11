@@ -1,3 +1,4 @@
+require("node:dns/promises").setServers(["1.1.1.1", "8.8.8.8"]);
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const Teacher = require("../models/Teacher");
@@ -13,36 +14,29 @@ const teachers = [
     subjects: ["data analytics", "cyber security"],
   },
   {
-    name: "Prof. Priya Sharma",
-    email: "priya.sharma@college.edu",
+    name: "Dr. Madhukar Andhale",
+    email: "madhukar@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Mathematics 1", "Mathematics 2", "Mathematics 3"],
+  },
+  {
+    name: "Prof. Kishan Rangeele",
+    email: "kishanr@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Analysis of Algorithm", "Database Management System"],
+  },
+  {
+    name: "Prof. Nikita Khurpate",
+    email: "nikitak@college.edu",
     password: "teacher123",
     department: "Computer Science",
     subjects: [
-      "Operating Systems",
-      "Computer Networks",
-      "Software Engineering",
+      "Computational Theory",
+      "Python Programming",
+      "Discrete Mathematics",
     ],
-  },
-  {
-    name: "Dr. Amit Patel",
-    email: "amit.patel@college.edu",
-    password: "teacher123",
-    department: "Electronics",
-    subjects: ["Digital Electronics", "Microprocessors", "Signal Processing"],
-  },
-  {
-    name: "Prof. Sunita Verma",
-    email: "sunita.verma@college.edu",
-    password: "teacher123",
-    department: "Mathematics",
-    subjects: ["Linear Algebra", "Calculus", "Probability & Statistics"],
-  },
-  {
-    name: "Dr. Admin Teacher",
-    email: "admin@college.edu",
-    password: "admin123",
-    department: "Computer Science",
-    subjects: ["Web Development", "Machine Learning", "Cloud Computing"],
   },
 ];
 

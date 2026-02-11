@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { authenticateTeacher } = require("../middleware/auth");
 const { apiRateLimiter } = require("../middleware/rateLimiter");
+const { loginTeacher } = require("../controllers/teacherController");
+
+router.post("/login", loginTeacher);
+
 const {
   createSession,
   getActiveSessions,
