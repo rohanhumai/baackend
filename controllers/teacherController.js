@@ -1,13 +1,23 @@
+// Import QR code generator library
 const QRCode = require("qrcode");
+
+// Import UUID generator (v4 for random unique session codes)
 const { v4: uuidv4 } = require("uuid");
+
+// Import database models
 const Session = require("../models/Session");
 const Attendance = require("../models/Attendance");
+
+// Import Redis utility manager
 const tokenManager = require("../utils/tokenManager");
 
+// ===================== TEACHER LOGIN =====================
 exports.loginTeacher = async (req, res) => {
   try {
+    // Extract credentials from request body
     const { email, password } = req.body;
 
+    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -15,10 +25,12 @@ exports.loginTeacher = async (req, res) => {
       });
     }
 
+    // Find teacher by normalized (lowercase) email
     const teacher = await Teacher.findOne({
       email: email.toLowerCase(),
     });
 
+    // If teacher not found
     if (!teacher) {
       return res.status(400).json({
         success: false,
@@ -26,8 +38,10 @@ exports.loginTeacher = async (req, res) => {
       });
     }
 
+    // Compare entered password with stored hashed password
     const isMatch = await teacher.comparePassword(password);
 
+    // If password mismatch
     if (!isMatch) {
       return res.status(400).json({
         success: false,
@@ -35,6 +49,7 @@ exports.loginTeacher = async (req, res) => {
       });
     }
 
+    // Successful login response (no JWT here in this version)
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -47,6 +62,7 @@ exports.loginTeacher = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
+
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -54,10 +70,13 @@ exports.loginTeacher = async (req, res) => {
   }
 };
 
+// ===================== CREATE SESSION =====================
 exports.createSession = async (req, res) => {
   try {
+    // Extract session details
     const { subject, department, year, section, expiryMinutes } = req.body;
 
+    // Validate subject presence
     if (!subject) {
       return res.status(400).json({
         success: false,
@@ -65,11 +84,16 @@ exports.createSession = async (req, res) => {
       });
     }
 
+    // Generate unique session code
     const sessionCode = uuidv4();
+
+    // Convert expiry time (default 5 minutes) into milliseconds
     const expiryMs = (expiryMinutes || 5) * 60 * 1000;
+
+    // Calculate expiration timestamp
     const expiresAt = new Date(Date.now() + expiryMs);
 
-    // QR data contains session code
+    // Prepare QR payload (encoded inside QR)
     const qrPayload = JSON.stringify({
       sessionCode,
       subject,
@@ -79,7 +103,7 @@ exports.createSession = async (req, res) => {
       expiresAt: expiresAt.toISOString(),
     });
 
-    // Generate QR code as base64
+    // Generate QR code as base64 image
     const qrImage = await QRCode.toDataURL(qrPayload, {
       width: 400,
       margin: 2,
@@ -89,6 +113,7 @@ exports.createSession = async (req, res) => {
       },
     });
 
+    // Save session in database
     const session = await Session.create({
       teacher: req.teacher._id,
       subject,
@@ -100,7 +125,7 @@ exports.createSession = async (req, res) => {
       section,
     });
 
-    // Cache session in Redis
+    // Cache session in Redis for faster lookup
     await tokenManager.cacheSession(
       sessionCode,
       {
@@ -114,9 +139,10 @@ exports.createSession = async (req, res) => {
         isActive: true,
         expiresAt: expiresAt.toISOString(),
       },
-      Math.ceil(expiryMs / 1000),
+      Math.ceil(expiryMs / 1000), // TTL in seconds
     );
 
+    // Send response
     res.status(201).json({
       success: true,
       message: "Session created successfully",
@@ -134,6 +160,7 @@ exports.createSession = async (req, res) => {
     });
   } catch (error) {
     console.error("Create session error:", error);
+
     res.status(500).json({
       success: false,
       message: "Error creating session",
@@ -141,20 +168,23 @@ exports.createSession = async (req, res) => {
   }
 };
 
+// ===================== GET ACTIVE SESSIONS =====================
 exports.getActiveSessions = async (req, res) => {
   try {
+    // Fetch active, non-expired sessions for teacher
     const sessions = await Session.find({
       teacher: req.teacher._id,
       isActive: true,
       expiresAt: { $gt: new Date() },
     }).sort({ createdAt: -1 });
 
-    // Get attendance counts from Redis
+    // Attach real-time attendance counts from Redis
     const sessionsWithCount = await Promise.all(
       sessions.map(async (session) => {
         const count = await tokenManager.getAttendanceCount(
           session._id.toString(),
         );
+
         return {
           ...session.toObject(),
           attendanceCount: count,
@@ -168,6 +198,7 @@ exports.getActiveSessions = async (req, res) => {
     });
   } catch (error) {
     console.error("Get sessions error:", error);
+
     res.status(500).json({
       success: false,
       message: "Error fetching sessions",
@@ -175,10 +206,12 @@ exports.getActiveSessions = async (req, res) => {
   }
 };
 
+// ===================== END SESSION =====================
 exports.endSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
+    // Ensure session belongs to logged-in teacher
     const session = await Session.findOne({
       _id: sessionId,
       teacher: req.teacher._id,
@@ -191,10 +224,11 @@ exports.endSession = async (req, res) => {
       });
     }
 
+    // Mark session inactive
     session.isActive = false;
     await session.save();
 
-    // Invalidate Redis cache
+    // Remove session from Redis cache
     await tokenManager.invalidateSession(session.sessionCode);
 
     res.json({
@@ -203,6 +237,7 @@ exports.endSession = async (req, res) => {
     });
   } catch (error) {
     console.error("End session error:", error);
+
     res.status(500).json({
       success: false,
       message: "Error ending session",
@@ -210,14 +245,17 @@ exports.endSession = async (req, res) => {
   }
 };
 
+// ===================== GET SESSION ATTENDANCE =====================
 exports.getSessionAttendance = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
+    // Fetch attendance records for session
     const attendance = await Attendance.find({
       session: sessionId,
       teacher: req.teacher._id,
     })
+      // Populate student reference fields
       .populate("student", "name rollNumber email department year section")
       .sort({ markedAt: 1 });
 
@@ -228,6 +266,7 @@ exports.getSessionAttendance = async (req, res) => {
     });
   } catch (error) {
     console.error("Get attendance error:", error);
+
     res.status(500).json({
       success: false,
       message: "Error fetching attendance",
@@ -235,19 +274,23 @@ exports.getSessionAttendance = async (req, res) => {
   }
 };
 
+// ===================== GET ALL SESSIONS =====================
 exports.getAllSessions = async (req, res) => {
   try {
+    // Fetch last 50 sessions
     const sessions = await Session.find({
       teacher: req.teacher._id,
     })
       .sort({ createdAt: -1 })
       .limit(50);
 
+    // Count attendance from DB (not Redis) for historical accuracy
     const sessionsWithCount = await Promise.all(
       sessions.map(async (session) => {
         const dbCount = await Attendance.countDocuments({
           session: session._id,
         });
+
         return {
           ...session.toObject(),
           attendanceCount: dbCount,
@@ -261,6 +304,7 @@ exports.getAllSessions = async (req, res) => {
     });
   } catch (error) {
     console.error("Get all sessions error:", error);
+
     res.status(500).json({
       success: false,
       message: "Error fetching sessions",
@@ -268,10 +312,12 @@ exports.getAllSessions = async (req, res) => {
   }
 };
 
+// ===================== REGENERATE QR =====================
 exports.regenerateQR = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
+    // Find active, non-expired session
     const session = await Session.findOne({
       _id: sessionId,
       teacher: req.teacher._id,
@@ -286,7 +332,7 @@ exports.regenerateQR = async (req, res) => {
       });
     }
 
-    // Generate new QR with same session code
+    // Generate QR image again using stored QR payload
     const qrImage = await QRCode.toDataURL(session.qrData, {
       width: 400,
       margin: 2,
@@ -299,6 +345,7 @@ exports.regenerateQR = async (req, res) => {
     });
   } catch (error) {
     console.error("Regenerate QR error:", error);
+
     res.status(500).json({
       success: false,
       message: "Error regenerating QR code",
