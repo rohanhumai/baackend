@@ -35,9 +35,26 @@ const studentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Device fingerprint — locked after first login
     deviceFingerprint: {
       type: String,
       default: null,
+    },
+    // When device was registered
+    deviceRegisteredAt: {
+      type: Date,
+      default: null,
+    },
+    // Device info for admin tracking
+    deviceInfo: {
+      browser: { type: String, default: null },
+      os: { type: String, default: null },
+      platform: { type: String, default: null },
+    },
+    // Is account active
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {

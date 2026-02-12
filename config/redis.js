@@ -1,3 +1,5 @@
+require("node:dns/promises").setServers(["1.1.1.1", "8.8.8.8"]);
+
 const Redis = require("ioredis");
 
 let redisClient;

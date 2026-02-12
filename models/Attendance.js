@@ -30,13 +30,24 @@ const attendanceSchema = new mongoose.Schema(
       enum: ["present", "late"],
       default: "present",
     },
+    // Store device fingerprint at time of scan
+    deviceFingerprint: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
   },
 );
 
-// Prevent duplicate attendance per session per student
+// Prevent duplicate: one student per session
 attendanceSchema.index({ session: 1, student: 1 }, { unique: true });
+
+// Fast lookup by student
+attendanceSchema.index({ student: 1, markedAt: -1 });
+
+// Fast lookup by session
+attendanceSchema.index({ session: 1, markedAt: 1 });
 
 module.exports = mongoose.model("Attendance", attendanceSchema);

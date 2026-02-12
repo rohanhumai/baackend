@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Teacher = require("../models/Teacher");
 const Student = require("../models/Student");
+const tokenManager = require("../utils/tokenManager");
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -61,6 +62,7 @@ exports.teacherLogin = async (req, res) => {
 exports.studentRegister = async (req, res) => {
   try {
     const { name, rollNumber, email, department, year, section } = req.body;
+    const fingerprint = req.headers["x-device-fingerprint"];
 
     if (!name || !rollNumber || !email || !department || !year) {
       return res.status(400).json({
@@ -69,17 +71,52 @@ exports.studentRegister = async (req, res) => {
       });
     }
 
-    // Check if student already exists
+    if (!fingerprint) {
+      return res.status(400).json({
+        success: false,
+        message: "Device fingerprint is required",
+      });
+    }
+
+    // Check if student exists
     const existingStudent = await Student.findOne({
       $or: [{ email }, { rollNumber }],
     });
 
     if (existingStudent) {
-      // If student exists, log them in
+      // Student exists — check device
+      if (existingStudent.deviceFingerprint) {
+        if (existingStudent.deviceFingerprint !== fingerprint) {
+          return res.status(403).json({
+            success: false,
+            message:
+              "This account is already linked to another device. Contact admin to reset.",
+            deviceLocked: true,
+          });
+        }
+      } else {
+        // First time — lock device
+        existingStudent.deviceFingerprint = fingerprint;
+        existingStudent.deviceRegisteredAt = new Date();
+        existingStudent.deviceInfo = {
+          browser: req.headers["user-agent"]?.substring(0, 100) || "unknown",
+          os: req.headers["sec-ch-ua-platform"] || "unknown",
+          platform:
+            req.headers["sec-ch-ua-mobile"] === "?1" ? "mobile" : "desktop",
+        };
+        await existingStudent.save();
+
+        // Cache in Redis
+        await tokenManager.lockDevice(
+          existingStudent._id.toString(),
+          fingerprint,
+        );
+      }
+
       const token = generateToken(existingStudent._id, "student");
       return res.json({
         success: true,
-        message: "Student already registered. Logged in.",
+        message: "Welcome back! Logged in.",
         token,
         student: {
           id: existingStudent._id,
@@ -93,6 +130,7 @@ exports.studentRegister = async (req, res) => {
       });
     }
 
+    // New student
     const student = await Student.create({
       name,
       rollNumber,
@@ -100,7 +138,18 @@ exports.studentRegister = async (req, res) => {
       department,
       year,
       section,
+      deviceFingerprint: fingerprint,
+      deviceRegisteredAt: new Date(),
+      deviceInfo: {
+        browser: req.headers["user-agent"]?.substring(0, 100) || "unknown",
+        os: req.headers["sec-ch-ua-platform"] || "unknown",
+        platform:
+          req.headers["sec-ch-ua-mobile"] === "?1" ? "mobile" : "desktop",
+      },
     });
+
+    // Cache device in Redis
+    await tokenManager.lockDevice(student._id.toString(), fingerprint);
 
     const token = generateToken(student._id, "student");
 
