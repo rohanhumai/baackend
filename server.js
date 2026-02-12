@@ -14,15 +14,16 @@ app.disable("x-powered-by");
 
 // CORS
 app.use(
-  cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"],
-    credentials: true,
-    exposedHeaders: [
-      "X-RateLimit-Limit",
-      "X-RateLimit-Remaining",
-      "X-RateLimit-Reset",
-    ],
-  }),
+  cors(),
+  //   {
+  //   origin: ["http://localhost:3000", "http://localhost:5173"],
+  //   credentials: true,
+  //   exposedHeaders: [
+  //     "X-RateLimit-Limit",
+  //     "X-RateLimit-Remaining",
+  //     "X-RateLimit-Reset",
+  //   ],
+  // }
 );
 
 // Body parser with size limit
