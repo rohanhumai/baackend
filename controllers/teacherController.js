@@ -4,7 +4,55 @@ const Session = require("../models/Session");
 const Attendance = require("../models/Attendance");
 const tokenManager = require("../utils/tokenManager");
 
-const MAX_EXPIRY_MINUTES = parseInt(process.env.MAX_QR_EXPIRY_MINUTES) || 1;
+exports.loginTeacher = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const teacher = await Teacher.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (!teacher) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const isMatch = await teacher.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      teacher: {
+        id: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+        department: teacher.department,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 
 exports.createSession = async (req, res) => {
   try {
@@ -17,19 +65,11 @@ exports.createSession = async (req, res) => {
       });
     }
 
-    // ENFORCE MAX 1 MINUTE EXPIRY
-    let expiry = parseInt(expiryMinutes) || 1;
-    if (expiry > MAX_EXPIRY_MINUTES) {
-      expiry = MAX_EXPIRY_MINUTES;
-    }
-    if (expiry < 1) {
-      expiry = 1;
-    }
-
     const sessionCode = uuidv4();
-    const expiryMs = expiry * 60 * 1000;
+    const expiryMs = (expiryMinutes || 5) * 60 * 1000;
     const expiresAt = new Date(Date.now() + expiryMs);
 
+    // QR data contains session code
     const qrPayload = JSON.stringify({
       sessionCode,
       subject,
@@ -39,10 +79,14 @@ exports.createSession = async (req, res) => {
       expiresAt: expiresAt.toISOString(),
     });
 
+    // Generate QR code as base64
     const qrImage = await QRCode.toDataURL(qrPayload, {
       width: 400,
       margin: 2,
-      color: { dark: "#000000", light: "#ffffff" },
+      color: {
+        dark: "#000000",
+        light: "#ffffff",
+      },
     });
 
     const session = await Session.create({
@@ -56,7 +100,7 @@ exports.createSession = async (req, res) => {
       section,
     });
 
-    // Cache in Redis with exact expiry
+    // Cache session in Redis
     await tokenManager.cacheSession(
       sessionCode,
       {
@@ -75,7 +119,7 @@ exports.createSession = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `Session created! QR expires in ${expiry} minute(s).`,
+      message: "Session created successfully",
       session: {
         id: session._id,
         sessionCode,
@@ -86,7 +130,6 @@ exports.createSession = async (req, res) => {
         department: session.department,
         year,
         section,
-        expiryMinutes: expiry,
       },
     });
   } catch (error) {
@@ -106,21 +149,29 @@ exports.getActiveSessions = async (req, res) => {
       expiresAt: { $gt: new Date() },
     }).sort({ createdAt: -1 });
 
+    // Get attendance counts from Redis
     const sessionsWithCount = await Promise.all(
       sessions.map(async (session) => {
         const count = await tokenManager.getAttendanceCount(
           session._id.toString(),
         );
-        return { ...session.toObject(), attendanceCount: count };
+        return {
+          ...session.toObject(),
+          attendanceCount: count,
+        };
       }),
     );
 
-    res.json({ success: true, sessions: sessionsWithCount });
+    res.json({
+      success: true,
+      sessions: sessionsWithCount,
+    });
   } catch (error) {
     console.error("Get sessions error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error fetching sessions" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching sessions",
+    });
   }
 };
 
@@ -134,20 +185,28 @@ exports.endSession = async (req, res) => {
     });
 
     if (!session) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Session not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
     }
 
     session.isActive = false;
     await session.save();
 
+    // Invalidate Redis cache
     await tokenManager.invalidateSession(session.sessionCode);
 
-    res.json({ success: true, message: "Session ended successfully" });
+    res.json({
+      success: true,
+      message: "Session ended successfully",
+    });
   } catch (error) {
     console.error("End session error:", error);
-    res.status(500).json({ success: false, message: "Error ending session" });
+    res.status(500).json({
+      success: false,
+      message: "Error ending session",
+    });
   }
 };
 
@@ -169,9 +228,10 @@ exports.getSessionAttendance = async (req, res) => {
     });
   } catch (error) {
     console.error("Get attendance error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error fetching attendance" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching attendance",
+    });
   }
 };
 
@@ -188,15 +248,60 @@ exports.getAllSessions = async (req, res) => {
         const dbCount = await Attendance.countDocuments({
           session: session._id,
         });
-        return { ...session.toObject(), attendanceCount: dbCount };
+        return {
+          ...session.toObject(),
+          attendanceCount: dbCount,
+        };
       }),
     );
 
-    res.json({ success: true, sessions: sessionsWithCount });
+    res.json({
+      success: true,
+      sessions: sessionsWithCount,
+    });
   } catch (error) {
     console.error("Get all sessions error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error fetching sessions" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching sessions",
+    });
+  }
+};
+
+exports.regenerateQR = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const session = await Session.findOne({
+      _id: sessionId,
+      teacher: req.teacher._id,
+      isActive: true,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Active session not found",
+      });
+    }
+
+    // Generate new QR with same session code
+    const qrImage = await QRCode.toDataURL(session.qrData, {
+      width: 400,
+      margin: 2,
+    });
+
+    res.json({
+      success: true,
+      qrImage,
+      expiresAt: session.expiresAt,
+    });
+  } catch (error) {
+    console.error("Regenerate QR error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error regenerating QR code",
+    });
   }
 };
