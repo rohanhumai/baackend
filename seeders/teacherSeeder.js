@@ -13,14 +13,14 @@ const teachers = [
     subjects: ["Cybersecurity", "Data Analytics", "Physics 2"],
   },
   {
-    name: "Prof. Priya Sharma",
-    email: "priya.sharma@college.edu",
+    name: "Nikita Khurpate",
+    email: "nikita@college.edu",
     password: "teacher123",
     department: "Computer Science",
     subjects: [
-      "Operating Systems",
-      "Computer Networks",
-      "Software Engineering",
+      "Discrete Mathematics",
+      "Computational Theory",
+      "Python Programming",
     ],
   },
   {
