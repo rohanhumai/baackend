@@ -43,6 +43,13 @@ app.use("/api/teacher", require("./routes/teacher"));
 app.use("/api/student", require("./routes/student"));
 app.use("/api/attendance", require("./routes/attendance"));
 
+try {
+  app.use("/api/admin", require("./routes/admin"));
+  console.log("✅ /api/admin loaded");
+} catch (e) {
+  console.error("❌ /api/admin failed:", e.message);
+}
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });

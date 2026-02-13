@@ -2,6 +2,7 @@ require("node:dns/promises").setServers(["1.1.1.1", "8.8.8.8"]);
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const Teacher = require("../models/Teacher");
+const Admin = require("../models/Admin");
 
 dotenv.config();
 
@@ -40,7 +41,15 @@ const teachers = [
   },
 ];
 
-const seedTeachers = async () => {
+const admins = [
+  {
+    name: "Rohan Sable",
+    email: "sablerohan125@gmail.com",
+    password: "Rohan@692007sagemain",
+    role: "admin",
+  },
+];
+const seed = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("MongoDB Connected for seeding");
@@ -61,6 +70,13 @@ const seedTeachers = async () => {
       console.log("  ---");
     });
 
+    await Admin.deleteMany({});
+    const createdAdmins = await Admin.create(admins);
+    console.log("\n=== Admins Seeded ===");
+    admins.forEach((a) =>
+      console.log(`  ${a.email} / ${a.password} (${a.role})`),
+    );
+
     console.log("\n=== Login Credentials ===\n");
     teachers.forEach((t) => {
       console.log(`  ${t.email} / ${t.password}`);
@@ -74,4 +90,4 @@ const seedTeachers = async () => {
   }
 };
 
-seedTeachers();
+seed();
