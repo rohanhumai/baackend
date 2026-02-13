@@ -39,6 +39,41 @@ const teachers = [
       "Discrete Mathematics",
     ],
   },
+  {
+    name: "Prof. Muneesh Pal",
+    email: "muneesh@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Python Programming", "Operating System"],
+  },
+  {
+    name: "Dr. Shital Agrawal",
+    email: "shital@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Intro to Web Technology", "Data Structures"],
+  },
+  {
+    name: "Adv Sunil Pagare",
+    email: "sunil@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Physics 1", "Entrepreneurship Development", "BMD"],
+  },
+  {
+    name: "Amarkumar Modi",
+    email: "amarkumar@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Mechanics(Dynamics)"],
+  },
+  {
+    name: "Astrologer Kailas More",
+    email: "kailas@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Mechanics(Statics)", "Engineering Graphics"],
+  },
 ];
 
 const admins = [
