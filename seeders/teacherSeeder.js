@@ -88,6 +88,20 @@ const teachers = [
     department: "Computer Science",
     subjects: ["Chemistry 1", "Chemistry 2"],
   },
+  {
+    name: "Sanika Swami",
+    email: "sanika@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Basic Electrical Engineering"],
+  },
+  {
+    name: "Nisha ",
+    email: "nisha@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Basic Electrical Engineering"],
+  },
 ];
 
 const admins = [
