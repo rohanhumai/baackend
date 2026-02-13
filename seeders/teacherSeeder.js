@@ -102,6 +102,20 @@ const teachers = [
     department: "Computer Science",
     subjects: ["Basic Electrical Engineering"],
   },
+  {
+    name: "Dipak Mhase",
+    email: "dipak@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Mathematics 1", "Mathematics 2"],
+  },
+  {
+    name: "KT Jadhao",
+    email: "kt@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Computer Organization and Architecture"],
+  },
 ];
 
 const admins = [
