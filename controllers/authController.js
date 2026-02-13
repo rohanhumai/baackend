@@ -1,12 +1,19 @@
 const jwt = require("jsonwebtoken");
 const Teacher = require("../models/Teacher");
 const Student = require("../models/Student");
+const tokenManager = require("../utils/tokenManager");
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "24h",
   });
 };
+
+const getDeviceInfo = (req) => ({
+  browser: req.headers["user-agent"]?.substring(0, 100) || "unknown",
+  os: req.headers["sec-ch-ua-platform"] || "unknown",
+  platform: req.headers["sec-ch-ua-mobile"] === "?1" ? "mobile" : "desktop",
+});
 
 exports.teacherLogin = async (req, res) => {
   try {
@@ -61,6 +68,14 @@ exports.teacherLogin = async (req, res) => {
 exports.studentRegister = async (req, res) => {
   try {
     const { name, rollNumber, email, department, year, section } = req.body;
+    const fingerprint = req.headers["x-device-fingerprint"];
+
+    if (!fingerprint || fingerprint.length < 10 || fingerprint.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid device fingerprint is required",
+      });
+    }
 
     if (!name || !rollNumber || !email || !department || !year) {
       return res.status(400).json({
@@ -75,6 +90,27 @@ exports.studentRegister = async (req, res) => {
     });
 
     if (existingStudent) {
+      if (
+        existingStudent.deviceFingerprint &&
+        existingStudent.deviceFingerprint !== fingerprint
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Access denied. This account is already linked to another device.",
+          deviceLocked: true,
+        });
+      }
+
+      if (!existingStudent.deviceFingerprint) {
+        existingStudent.deviceFingerprint = fingerprint;
+        existingStudent.deviceRegisteredAt = new Date();
+        existingStudent.deviceInfo = getDeviceInfo(req);
+        await existingStudent.save();
+      }
+
+      await tokenManager.lockDevice(existingStudent._id.toString(), fingerprint);
+
       // If student exists, log them in
       const token = generateToken(existingStudent._id, "student");
       return res.json({
@@ -100,7 +136,12 @@ exports.studentRegister = async (req, res) => {
       department,
       year,
       section,
+      deviceFingerprint: fingerprint,
+      deviceRegisteredAt: new Date(),
+      deviceInfo: getDeviceInfo(req),
     });
+
+    await tokenManager.lockDevice(student._id.toString(), fingerprint);
 
     const token = generateToken(student._id, "student");
 

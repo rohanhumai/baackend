@@ -104,6 +104,38 @@ const tokenManager = {
       return 0;
     }
   },
+
+  async verifyDevice(studentId, fingerprint) {
+    try {
+      const redis = getRedisClient();
+      const key = `device:lock:${studentId}`;
+      const lockedFingerprint = await redis.get(key);
+
+      if (!lockedFingerprint) {
+        return { firstTime: true, valid: true };
+      }
+
+      return {
+        firstTime: false,
+        valid: lockedFingerprint === fingerprint,
+      };
+    } catch (error) {
+      console.error("Device verify error:", error.message);
+      return { firstTime: false, valid: false };
+    }
+  },
+
+  async lockDevice(studentId, fingerprint) {
+    try {
+      const redis = getRedisClient();
+      const key = `device:lock:${studentId}`;
+      await redis.set(key, fingerprint);
+      return true;
+    } catch (error) {
+      console.error("Device lock error:", error.message);
+      return false;
+    }
+  },
 };
 
 module.exports = tokenManager;
