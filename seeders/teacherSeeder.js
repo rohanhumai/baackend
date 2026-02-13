@@ -6,11 +6,11 @@ dotenv.config();
 
 const teachers = [
   {
-    name: "Dr. Rajesh Kumar",
-    email: "rajesh.kumar@college.edu",
+    name: "Shailesh Nandgaonkar",
+    email: "shailesh@college.edu",
     password: "teacher123",
     department: "Computer Science",
-    subjects: ["Data Structures", "Algorithms", "Database Management"],
+    subjects: ["Cybersecurity", "Data Analytics", "Physics 2"],
   },
   {
     name: "Prof. Priya Sharma",
