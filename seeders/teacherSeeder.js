@@ -74,6 +74,13 @@ const teachers = [
     department: "Computer Science",
     subjects: ["Mechanics(Statics)", "Engineering Graphics"],
   },
+  {
+    name: "Sanjay Sable",
+    email: "sanjay@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Engineering Graphics"],
+  },
 ];
 
 const admins = [
