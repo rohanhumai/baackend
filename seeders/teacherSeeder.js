@@ -31,11 +31,11 @@ const teachers = [
     subjects: ["Database Management System", "Analysis of Algorithms"],
   },
   {
-    name: "Prof. Sunita Verma",
-    email: "sunita.verma@college.edu",
+    name: "Muneesh Pal",
+    email: "muneesh@college.edu",
     password: "teacher123",
-    department: "Mathematics",
-    subjects: ["Linear Algebra", "Calculus", "Probability & Statistics"],
+    department: "Computer Science",
+    subjects: ["Python Programming", "Operating System"],
   },
   {
     name: "Dr. Admin Teacher",
