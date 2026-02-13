@@ -38,11 +38,11 @@ const teachers = [
     subjects: ["Python Programming", "Operating System"],
   },
   {
-    name: "Dr. Admin Teacher",
-    email: "admin@college.edu",
+    name: "Shital agrawal",
+    email: "shital@college.edu",
     password: "admin123",
     department: "Computer Science",
-    subjects: ["Web Development", "Machine Learning", "Cloud Computing"],
+    subjects: ["Web Development"],
   },
 ];
 
