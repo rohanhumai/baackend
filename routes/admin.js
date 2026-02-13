@@ -1,56 +1,45 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateAdmin } = require("../middleware/adminAuth");
+const {
+  authRateLimiter,
+  apiRateLimiter,
+} = require("../middleware/rateLimiter");
+const admin = require("../controllers/adminController");
 
-const adminController = require("../controllers/adminController");
+// Auth
+router.post("/login", authRateLimiter, admin.login);
 
-if (!adminController.login) console.error("❌ admin.login missing");
-
-// Check if adminAuth exists
-let authenticateAdmin;
-try {
-  const adminAuth = require("../middleware/adminAuth");
-  authenticateAdmin = adminAuth.authenticateAdmin;
-  console.log("✅ adminAuth loaded");
-} catch (e) {
-  console.error("❌ adminAuth not found:", e.message);
-  authenticateAdmin = (req, res, next) => {
-    res
-      .status(500)
-      .json({ success: false, message: "Admin auth not configured" });
-  };
-}
-
-// Public
-router.post("/login", adminController.login);
-
-// Protected
+// Protected routes
 router.use(authenticateAdmin);
+router.use(apiRateLimiter);
 
-router.get("/dashboard", adminController.getDashboardStats);
+// Dashboard
+router.get("/dashboard", admin.getDashboardStats);
 
 // Students
-router.get("/students", adminController.getAllStudents);
-router.get("/students/:id", adminController.getStudentDetails);
-router.post("/students/:id/reset-device", adminController.resetStudentDevice);
-router.post("/students/:id/reset-token", adminController.resetStudentToken);
-router.put("/students/:id/toggle-status", adminController.toggleStudentStatus);
-router.delete("/students/:id", adminController.deleteStudent);
+router.get("/students", admin.getAllStudents);
+router.get("/students/:id", admin.getStudentDetails);
+router.post("/students/:id/reset-device", admin.resetStudentDevice);
+router.post("/students/:id/reset-token", admin.resetStudentToken);
+router.put("/students/:id/toggle-status", admin.toggleStudentStatus);
+router.delete("/students/:id", admin.deleteStudent);
 
 // Teachers
-router.get("/teachers", adminController.getAllTeachers);
-router.post("/teachers", adminController.createTeacher);
-router.delete("/teachers/:id", adminController.deleteTeacher);
+router.get("/teachers", admin.getAllTeachers);
+router.post("/teachers", admin.createTeacher);
+router.delete("/teachers/:id", admin.deleteTeacher);
 
 // Sessions
-router.get("/sessions", adminController.getAllSessions);
-router.put("/sessions/:id/force-end", adminController.forceEndSession);
+router.get("/sessions", admin.getAllSessions);
+router.put("/sessions/:id/force-end", admin.forceEndSession);
 
 // Attendance
-router.get("/attendance", adminController.getAllAttendance);
-router.delete("/attendance/:id", adminController.deleteAttendance);
+router.get("/attendance", admin.getAllAttendance);
+router.delete("/attendance/:id", admin.deleteAttendance);
 
 // Redis
-router.get("/redis", adminController.getRedisStats);
-router.post("/redis/flush", adminController.flushRedis);
+router.get("/redis", admin.getRedisStats);
+router.post("/redis/flush", admin.flushRedis);
 
 module.exports = router;
