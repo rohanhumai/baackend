@@ -24,11 +24,11 @@ const teachers = [
     ],
   },
   {
-    name: "Dr. Amit Patel",
-    email: "amit.patel@college.edu",
+    name: "Kishan Rangeele",
+    email: "kishan@college.edu",
     password: "teacher123",
-    department: "Electronics",
-    subjects: ["Digital Electronics", "Microprocessors", "Signal Processing"],
+    department: "Computer Science",
+    subjects: ["Database Management System", "Analysis of Algorithms"],
   },
   {
     name: "Prof. Sunita Verma",
