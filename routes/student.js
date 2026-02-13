@@ -1,13 +1,10 @@
 const express = require("express");
 const router = express.Router();
-
 const { authenticateStudent } = require("../middleware/auth");
+const { apiRateLimiter } = require("../middleware/rateLimiter");
 const studentController = require("../controllers/studentController");
 
-if (!studentController.getTokenStatus)
-  console.error("❌ getTokenStatus missing");
-if (!studentController.getProfile) console.error("❌ getProfile missing");
-
+router.use(apiRateLimiter);
 router.use(authenticateStudent);
 
 router.get("/token-status", studentController.getTokenStatus);
