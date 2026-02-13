@@ -4,22 +4,20 @@ let redisClient;
 
 const connectRedis = () => {
   redisClient = new Redis({
-    host: process.env.REDIS_HOST || "127.0.0.1",
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
-    retryDelayOnFailover: 100,
+    host: process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT),
+    password: process.env.REDIS_PASSWORD,
     maxRetriesPerRequest: 3,
-    lazyConnect: true,
+    connectTimeout: 15000,
+    retryStrategy(times) {
+      if (times > 5) return null;
+      return Math.min(times * 500, 3000);
+    }
   });
 
-  redisClient
-    .connect()
-    .then(() => {
-      console.log("Redis Connected");
-    })
-    .catch((err) => {
-      console.error("Redis Connection Error:", err.message);
-    });
+  redisClient.on("ready", () => {
+    console.log("Redis Cloud Connected ✅");
+  });
 
   redisClient.on("error", (err) => {
     console.error("Redis Error:", err.message);
