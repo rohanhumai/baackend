@@ -8,6 +8,7 @@ exports.markAttendance = async (req, res) => {
     const { sessionCode } = req.body;
     const studentId = req.student._id.toString();
 
+    // Validate input
     if (!sessionCode) {
       return res.status(400).json({
         success: false,
@@ -15,7 +16,7 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    // Step 1: Check token availability from Redis (anti-proxy: 1 scan per hour)
+    // STEP 1: Check if student has token available (Redis)
     const hasToken = await tokenManager.hasAvailableToken(studentId);
     if (!hasToken) {
       const cooldown = await tokenManager.getCooldownRemaining(studentId);
@@ -27,12 +28,11 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    // Step 2: Try to get session from Redis cache first
+    // STEP 2: Find the session (Redis cache first, then DB)
     let sessionData = await tokenManager.getCachedSession(sessionCode);
     let session;
 
     if (sessionData) {
-      // Verify session is still active
       if (
         !sessionData.isActive ||
         new Date(sessionData.expiresAt) < new Date()
@@ -44,7 +44,6 @@ exports.markAttendance = async (req, res) => {
       }
       session = await Session.findById(sessionData._id);
     } else {
-      // Fallback to database
       session = await Session.findOne({
         sessionCode,
         isActive: true,
@@ -59,20 +58,20 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    // Step 3: Check if already marked attendance for this session
-    const existingAttendance = await Attendance.findOne({
+    // STEP 3: Check duplicate attendance
+    const existing = await Attendance.findOne({
       session: session._id,
       student: req.student._id,
     });
 
-    if (existingAttendance) {
+    if (existing) {
       return res.status(400).json({
         success: false,
         message: "Attendance already marked for this session",
       });
     }
 
-    // Step 4: Mark attendance
+    // STEP 4: Mark attendance in MongoDB
     const attendance = await Attendance.create({
       session: session._id,
       student: req.student._id,
@@ -81,21 +80,22 @@ exports.markAttendance = async (req, res) => {
       status: "present",
     });
 
-    // Step 5: Consume the token (set 1-hour cooldown in Redis)
+    // STEP 5: Consume token - 1 hour cooldown in Redis
     await tokenManager.consumeToken(studentId, session._id.toString());
 
-    // Step 6: Save token usage to DB for records
+    // STEP 6: Save token record in DB
     await Token.create({
       student: req.student._id,
       sessionId: session._id,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     });
 
-    // Step 7: Increment attendance count in Redis
+    // STEP 7: Update attendance count in Redis
     const totalCount = await tokenManager.incrementAttendanceCount(
       session._id.toString(),
     );
 
+    // STEP 8: Return success
     res.status(201).json({
       success: true,
       message: "Attendance marked successfully!",
@@ -137,7 +137,6 @@ exports.getMyAttendance = async (req, res) => {
       attendance,
     });
   } catch (error) {
-    console.error("Get my attendance error:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching attendance history",

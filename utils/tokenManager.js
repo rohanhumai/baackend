@@ -4,24 +4,20 @@ const COOLDOWN_HOURS = parseInt(process.env.TOKEN_COOLDOWN_HOURS) || 1;
 const COOLDOWN_SECONDS = COOLDOWN_HOURS * 60 * 60;
 
 const tokenManager = {
-  /**
-   * Check if student has an available token (hasn't scanned in the last hour)
-   */
+  // Check if student can scan
   async hasAvailableToken(studentId) {
     try {
       const redis = getRedisClient();
       const key = `token:cooldown:${studentId}`;
       const exists = await redis.exists(key);
-      return !exists; // Token is available if cooldown doesn't exist
+      return !exists;
     } catch (error) {
       console.error("Token check error:", error.message);
       return false;
     }
   },
 
-  /**
-   * Consume a token - set cooldown for the student
-   */
+  // Use the token - block for 1 hour
   async consumeToken(studentId, sessionId) {
     try {
       const redis = getRedisClient();
@@ -30,7 +26,6 @@ const tokenManager = {
         sessionId,
         usedAt: new Date().toISOString(),
       });
-
       await redis.setex(key, COOLDOWN_SECONDS, data);
       return true;
     } catch (error) {
@@ -39,9 +34,7 @@ const tokenManager = {
     }
   },
 
-  /**
-   * Get remaining cooldown time in seconds
-   */
+  // How many seconds left in cooldown
   async getCooldownRemaining(studentId) {
     try {
       const redis = getRedisClient();
@@ -49,14 +42,11 @@ const tokenManager = {
       const ttl = await redis.ttl(key);
       return ttl > 0 ? ttl : 0;
     } catch (error) {
-      console.error("Cooldown check error:", error.message);
       return 0;
     }
   },
 
-  /**
-   * Cache active session in Redis
-   */
+  // Cache session in Redis
   async cacheSession(sessionCode, sessionData, expirySeconds) {
     try {
       const redis = getRedisClient();
@@ -64,14 +54,11 @@ const tokenManager = {
       await redis.setex(key, expirySeconds, JSON.stringify(sessionData));
       return true;
     } catch (error) {
-      console.error("Session cache error:", error.message);
       return false;
     }
   },
 
-  /**
-   * Get cached session from Redis
-   */
+  // Get session from Redis
   async getCachedSession(sessionCode) {
     try {
       const redis = getRedisClient();
@@ -79,45 +66,34 @@ const tokenManager = {
       const data = await redis.get(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      console.error("Session cache get error:", error.message);
       return null;
     }
   },
 
-  /**
-   * Invalidate session cache
-   */
+  // Invalidate session
   async invalidateSession(sessionCode) {
     try {
       const redis = getRedisClient();
-      const key = `session:${sessionCode}`;
-      await redis.del(key);
+      await redis.del(`session:${sessionCode}`);
       return true;
     } catch (error) {
-      console.error("Session invalidate error:", error.message);
       return false;
     }
   },
 
-  /**
-   * Track attendance count in Redis for real-time updates
-   */
+  // Count attendance in Redis
   async incrementAttendanceCount(sessionId) {
     try {
       const redis = getRedisClient();
       const key = `attendance:count:${sessionId}`;
       const count = await redis.incr(key);
-      await redis.expire(key, 86400); // Expire after 24 hours
+      await redis.expire(key, 86400);
       return count;
     } catch (error) {
-      console.error("Attendance count error:", error.message);
       return 0;
     }
   },
 
-  /**
-   * Get attendance count from Redis
-   */
   async getAttendanceCount(sessionId) {
     try {
       const redis = getRedisClient();
@@ -125,7 +101,6 @@ const tokenManager = {
       const count = await redis.get(key);
       return parseInt(count) || 0;
     } catch (error) {
-      console.error("Attendance count get error:", error.message);
       return 0;
     }
   },
