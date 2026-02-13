@@ -81,6 +81,13 @@ const teachers = [
     department: "Computer Science",
     subjects: ["Engineering Graphics"],
   },
+  {
+    name: "Vaishali Patharkar",
+    email: "vaishali@college.edu",
+    password: "teacher123",
+    department: "Computer Science",
+    subjects: ["Chemistry 1", "Chemistry 2"],
+  },
 ];
 
 const admins = [
