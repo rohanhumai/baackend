@@ -2,15 +2,12 @@ const express = require("express");
 const router = express.Router();
 const { authenticateStudent } = require("../middleware/auth");
 const { apiRateLimiter } = require("../middleware/rateLimiter");
-const {
-  getTokenStatus,
-  getProfile,
-} = require("../controllers/studentController");
+const studentController = require("../controllers/studentController");
 
 router.use(apiRateLimiter);
 router.use(authenticateStudent);
 
-router.get("/token-status", getTokenStatus);
-router.get("/profile", getProfile);
+router.get("/token-status", studentController.getTokenStatus);
+router.get("/profile", studentController.getProfile);
 
 module.exports = router;

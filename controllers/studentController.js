@@ -3,7 +3,6 @@ const tokenManager = require("../utils/tokenManager");
 exports.getTokenStatus = async (req, res) => {
   try {
     const studentId = req.student._id.toString();
-
     const hasToken = await tokenManager.hasAvailableToken(studentId);
     const cooldownRemaining =
       await tokenManager.getCooldownRemaining(studentId);
