@@ -1,78 +1,28 @@
-require("node:dns/promises").setServers(["1.1.1.1", "8.8.8.8"]);
-
 const Redis = require("ioredis");
 
 let redisClient;
 
 const connectRedis = () => {
-  // Try connecting with Redis URL format
-  const redisUrl = `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
-
-  console.log(
-    `Redis: Connecting to ${process.env.REDIS_HOST}:${process.env.REDIS_PORT}...`,
-  );
-
-  redisClient = new Redis(redisUrl, {
+  redisClient = new Redis({
+    host: process.env.REDIS_HOST || "127.0.0.1",
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    retryDelayOnFailover: 100,
     maxRetriesPerRequest: 3,
-    connectTimeout: 15000,
-    commandTimeout: 10000,
-    retryStrategy(times) {
-      if (times > 5) {
-        console.error("Redis: Max retries reached");
-        return null;
-      }
-      return Math.min(times * 500, 3000);
-    },
-  });
-
-  redisClient.on("ready", () => {
-    console.log("Redis Cloud Connected ✅");
-  });
-
-  redisClient.on("error", (err) => {
-    console.error("Redis Error:", err.message);
+    lazyConnect: true,
   });
 
   redisClient
-    .ping()
-    .then((res) => {
-      console.log("Redis PING:", res);
+    .connect()
+    .then(() => {
+      console.log("Redis Connected");
     })
     .catch((err) => {
-      console.error("Redis PING failed:", err.message);
-      console.log("Trying with TLS...");
-      tryWithTLS();
+      console.error("Redis Connection Error:", err.message);
     });
-};
-
-// Fallback: try with TLS
-const tryWithTLS = () => {
-  if (redisClient) {
-    redisClient.disconnect();
-  }
-
-  const redisUrl = `rediss://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
-
-  redisClient = new Redis(redisUrl, {
-    tls: {
-      rejectUnauthorized: false,
-      servername: process.env.REDIS_HOST,
-    },
-    maxRetriesPerRequest: 3,
-    connectTimeout: 15000,
-    commandTimeout: 10000,
-    retryStrategy(times) {
-      if (times > 3) return null;
-      return Math.min(times * 500, 3000);
-    },
-  });
-
-  redisClient.on("ready", () => {
-    console.log("Redis Cloud Connected (TLS) ✅");
-  });
 
   redisClient.on("error", (err) => {
-    console.error("Redis TLS Error:", err.message);
+    console.error("Redis Error:", err.message);
   });
 };
 

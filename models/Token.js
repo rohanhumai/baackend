@@ -6,7 +6,6 @@ const tokenSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
-      index: true,
     },
     usedAt: {
       type: Date,
@@ -15,10 +14,6 @@ const tokenSchema = new mongoose.Schema(
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
-    },
-    deviceFingerprint: {
-      type: String,
-      required: true,
     },
     expiresAt: {
       type: Date,

@@ -4,56 +4,6 @@ const Session = require("../models/Session");
 const Attendance = require("../models/Attendance");
 const tokenManager = require("../utils/tokenManager");
 
-exports.loginTeacher = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
-
-    const teacher = await Teacher.findOne({
-      email: email.toLowerCase(),
-    });
-
-    if (!teacher) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-
-    const isMatch = await teacher.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      teacher: {
-        id: teacher._id,
-        name: teacher.name,
-        email: teacher.email,
-        department: teacher.department,
-      },
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
 exports.createSession = async (req, res) => {
   try {
     const { subject, department, year, section, expiryMinutes } = req.body;

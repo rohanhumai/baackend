@@ -39,19 +39,6 @@ const studentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    deviceRegisteredAt: {
-      type: Date,
-      default: null,
-    },
-    deviceInfo: {
-      browser: { type: String, default: null },
-      os: { type: String, default: null },
-      platform: { type: String, default: null },
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
   },
   {
     timestamps: true,

@@ -16,7 +16,6 @@ const sessionSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     qrData: {
       type: String,
@@ -25,12 +24,10 @@ const sessionSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
     department: {
       type: String,
@@ -42,21 +39,12 @@ const sessionSchema = new mongoose.Schema(
     section: {
       type: String,
     },
-    // Track total scans for this session
-    totalScans: {
-      type: Number,
-      default: 0,
-    },
   },
   {
     timestamps: true,
   },
 );
 
-// Auto expire sessions
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-// Compound index for fast lookup
-sessionSchema.index({ sessionCode: 1, isActive: 1, expiresAt: 1 });
 
 module.exports = mongoose.model("Session", sessionSchema);

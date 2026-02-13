@@ -1,26 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateStudent } = require("../middleware/auth");
-const { verifyDevice } = require("../middleware/deviceAuth");
+const { attendanceRateLimiter } = require("../middleware/rateLimiter");
 const {
-  attendanceRateLimiter,
-  deviceRateLimiter,
-} = require("../middleware/rateLimiter");
-const attendanceController = require("../controllers/attendanceController");
+  markAttendance,
+  getMyAttendance,
+} = require("../controllers/attendanceController");
 
 router.post(
   "/mark",
   authenticateStudent,
   attendanceRateLimiter,
-  deviceRateLimiter,
-  verifyDevice,
-  attendanceController.markAttendance,
+  markAttendance,
 );
-
-router.get(
-  "/my-attendance",
-  authenticateStudent,
-  attendanceController.getMyAttendance,
-);
+router.get("/my-attendance", authenticateStudent, getMyAttendance);
 
 module.exports = router;

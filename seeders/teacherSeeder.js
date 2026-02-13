@@ -1,138 +1,52 @@
-require("node:dns/promises").setServers(["1.1.1.1", "8.8.8.8"]);
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const Teacher = require("../models/Teacher");
-const Admin = require("../models/Admin");
 
 dotenv.config();
 
 const teachers = [
   {
-    name: "Dr. Sahilesh Nandgaonkar",
-    email: "shailesh@college.edu",
+    name: "Dr. Rajesh Kumar",
+    email: "rajesh.kumar@college.edu",
     password: "teacher123",
     department: "Computer Science",
-    subjects: ["data analytics", "cyber security", "Physics 2"],
+    subjects: ["Data Structures", "Algorithms", "Database Management"],
   },
   {
-    name: "Dr. Madhukar Andhale",
-    email: "madhukar@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Mathematics 1", "Mathematics 2", "Mathematics 3"],
-  },
-  {
-    name: "Prof. Kishan Rangeele",
-    email: "kishanr@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Analysis of Algorithm", "Database Management System"],
-  },
-  {
-    name: "Prof. Nikita Khurpate",
-    email: "nikitak@college.edu",
+    name: "Prof. Priya Sharma",
+    email: "priya.sharma@college.edu",
     password: "teacher123",
     department: "Computer Science",
     subjects: [
-      "Computational Theory",
-      "Python Programming",
-      "Discrete Mathematics",
+      "Operating Systems",
+      "Computer Networks",
+      "Software Engineering",
     ],
   },
   {
-    name: "Prof. Muneesh Pal",
-    email: "muneesh@college.edu",
+    name: "Dr. Amit Patel",
+    email: "amit.patel@college.edu",
     password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Python Programming", "Operating System"],
+    department: "Electronics",
+    subjects: ["Digital Electronics", "Microprocessors", "Signal Processing"],
   },
   {
-    name: "Dr. Shital Agrawal",
-    email: "shital@college.edu",
+    name: "Prof. Sunita Verma",
+    email: "sunita.verma@college.edu",
     password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Intro to Web Technology", "Data Structures"],
+    department: "Mathematics",
+    subjects: ["Linear Algebra", "Calculus", "Probability & Statistics"],
   },
   {
-    name: "Adv Sunil Pagare",
-    email: "sunil@college.edu",
-    password: "teacher123",
+    name: "Dr. Admin Teacher",
+    email: "admin@college.edu",
+    password: "admin123",
     department: "Computer Science",
-    subjects: ["Physics 1", "Entrepreneurship Development", "BMD"],
-  },
-  {
-    name: "Amarkumar Modi",
-    email: "amarkumar@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Mechanics(Dynamics)"],
-  },
-  {
-    name: "Astrologer Kailas More",
-    email: "kailas@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Mechanics(Statics)", "Engineering Graphics"],
-  },
-  {
-    name: "Sanjay Sable",
-    email: "sanjay@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Engineering Graphics"],
-  },
-  {
-    name: "Vaishali Patharkar",
-    email: "vaishali@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Chemistry 1", "Chemistry 2"],
-  },
-  {
-    name: "Sanika Swami",
-    email: "sanika@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Basic Electrical Engineering"],
-  },
-  {
-    name: "Nisha ",
-    email: "nisha@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Basic Electrical Engineering"],
-  },
-  {
-    name: "Dipak Mhase",
-    email: "dipak@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Mathematics 1", "Mathematics 2"],
-  },
-  {
-    name: "KT Jadhao",
-    email: "kt@college.edu",
-    password: "teacher123",
-    department: "Computer Science",
-    subjects: ["Computer Organization and Architecture"],
+    subjects: ["Web Development", "Machine Learning", "Cloud Computing"],
   },
 ];
 
-const admins = [
-  {
-    name: "Rohan Sable",
-    email: "rohan@admin.edu",
-    password: "sagemain",
-    role: "admin",
-  },
-  {
-    name: "Nilesh Sharma",
-    email: "nilesh@admin.edu",
-    password: "nilesh123",
-    role: "admin",
-  },
-];
-const seed = async () => {
+const seedTeachers = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("MongoDB Connected for seeding");
@@ -153,13 +67,6 @@ const seed = async () => {
       console.log("  ---");
     });
 
-    await Admin.deleteMany({});
-    const createdAdmins = await Admin.create(admins);
-    console.log("\n=== Admins Seeded ===");
-    admins.forEach((a) =>
-      console.log(`  ${a.email} / ${a.password} (${a.role})`),
-    );
-
     console.log("\n=== Login Credentials ===\n");
     teachers.forEach((t) => {
       console.log(`  ${t.email} / ${t.password}`);
@@ -173,4 +80,4 @@ const seed = async () => {
   }
 };
 
-seed();
+seedTeachers();
