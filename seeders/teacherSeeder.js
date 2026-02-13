@@ -12,7 +12,7 @@ const teachers = [
     email: "shailesh@college.edu",
     password: "teacher123",
     department: "Computer Science",
-    subjects: ["data analytics", "cyber security"],
+    subjects: ["data analytics", "cyber security", "Physics 2"],
   },
   {
     name: "Dr. Madhukar Andhale",
@@ -44,8 +44,14 @@ const teachers = [
 const admins = [
   {
     name: "Rohan Sable",
-    email: "sablerohan125@gmail.com",
-    password: "Rohan@692007sagemain",
+    email: "rohan@admin.edu",
+    password: "sagemain",
+    role: "admin",
+  },
+  {
+    name: "Nilesh Sharma",
+    email: "nilesh@admin.edu",
+    password: "nilesh123",
     role: "admin",
   },
 ];
