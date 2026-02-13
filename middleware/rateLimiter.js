@@ -53,6 +53,14 @@ const attendanceRateLimiter = redisRateLimiter({
   message: "Too many attendance requests. Please wait before trying again.",
 });
 
+// Per-device protection for fingerprint-based endpoints
+const deviceRateLimiter = redisRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+  keyPrefix: "rl:device",
+  message: "Too many device verification requests. Please wait.",
+});
+
 // General API limiter
 const apiRateLimiter = redisRateLimiter({
   windowMs: 60 * 1000,
@@ -72,6 +80,7 @@ const authRateLimiter = redisRateLimiter({
 module.exports = {
   redisRateLimiter,
   attendanceRateLimiter,
+  deviceRateLimiter,
   apiRateLimiter,
   authRateLimiter,
 };
