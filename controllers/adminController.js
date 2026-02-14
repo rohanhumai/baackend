@@ -653,13 +653,10 @@ exports.flushRedis = async (req, res) => {
       return res.json({ success: true, message: "All Redis data cleared." });
     }
 
-    res
-      .status(400)
-      .json({
-        success: false,
-        message:
-          "Invalid type. Use: tokens, devices, sessions, ratelimits, all",
-      });
+    res.status(400).json({
+      success: false,
+      message: "Invalid type. Use: tokens, devices, sessions, ratelimits, all",
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error flushing Redis" });
   }
